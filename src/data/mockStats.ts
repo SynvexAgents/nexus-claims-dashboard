@@ -1,0 +1,147 @@
+import type { ActivityItem, KPIData } from '../types'
+
+export const kpiData: KPIData[] = [
+  {
+    label: 'Dossiers traités aujourd\'hui',
+    value: 47,
+    trend: 12,
+    trendLabel: 'vs hier',
+    sparkline: [32, 28, 35, 41, 38, 44, 47],
+    icon: 'FileCheck',
+    color: 'text-accent-blue',
+    glowClass: 'glow-blue',
+  },
+  {
+    label: 'Taux auto-validation',
+    value: 94.2,
+    suffix: '%',
+    trend: 2.1,
+    trendLabel: 'vs sem. dernière',
+    sparkline: [78, 82, 85, 88, 90, 92, 94.2],
+    icon: 'CheckCircle',
+    color: 'text-accent-green',
+    glowClass: 'glow-green',
+  },
+  {
+    label: 'Temps moyen traitement',
+    value: 1.8,
+    suffix: ' min',
+    trend: -34,
+    trendLabel: 'vs manuel',
+    sparkline: [4.2, 3.5, 2.8, 2.3, 2.1, 1.9, 1.8],
+    icon: 'Clock',
+    color: 'text-accent-cyan',
+    glowClass: 'glow-cyan',
+  },
+  {
+    label: 'Anomalies détectées',
+    value: 3,
+    trend: 0,
+    trendLabel: 'cette semaine',
+    sparkline: [1, 0, 2, 1, 3, 0, 3],
+    icon: 'AlertTriangle',
+    color: 'text-accent-red',
+    glowClass: 'glow-red',
+  },
+  {
+    label: 'Réclamations en cours',
+    value: 2,
+    trend: -1,
+    trendLabel: 'vs sem. dernière',
+    sparkline: [5, 4, 3, 3, 2, 3, 2],
+    icon: 'MessageSquare',
+    color: 'text-accent-purple',
+    glowClass: 'glow-purple',
+  },
+  {
+    label: 'Score moyen confiance',
+    value: 82,
+    suffix: '/100',
+    trend: 5,
+    trendLabel: 'vs sem. dernière',
+    sparkline: [68, 72, 74, 76, 78, 80, 82],
+    icon: 'Shield',
+    color: 'text-accent-orange',
+    glowClass: 'glow-orange',
+  },
+]
+
+export const autoValidationData = [
+  { date: '12 Mar', taux: 78 },
+  { date: '13 Mar', taux: 80 },
+  { date: '14 Mar', taux: 82 },
+  { date: '15 Mar', taux: 79 },
+  { date: '16 Mar', taux: 84 },
+  { date: '17 Mar', taux: 86 },
+  { date: '18 Mar', taux: 85 },
+  { date: '19 Mar', taux: 88 },
+  { date: '20 Mar', taux: 87 },
+  { date: '21 Mar', taux: 89 },
+  { date: '22 Mar', taux: 90 },
+  { date: '23 Mar', taux: 88 },
+  { date: '24 Mar', taux: 91 },
+  { date: '25 Mar', taux: 90 },
+  { date: '26 Mar', taux: 92 },
+  { date: '27 Mar', taux: 91 },
+  { date: '28 Mar', taux: 93 },
+  { date: '29 Mar', taux: 92 },
+  { date: '30 Mar', taux: 90 },
+  { date: '31 Mar', taux: 91 },
+  { date: '01 Avr', taux: 93 },
+  { date: '02 Avr', taux: 92 },
+  { date: '03 Avr', taux: 94 },
+  { date: '04 Avr', taux: 93 },
+  { date: '05 Avr', taux: 92 },
+  { date: '06 Avr', taux: 94 },
+  { date: '07 Avr', taux: 93 },
+  { date: '08 Avr', taux: 95 },
+  { date: '09 Avr', taux: 94 },
+  { date: '10 Avr', taux: 94.2 },
+]
+
+export const volumeData = [
+  { jour: 'Lun', recus: 48, traites: 45 },
+  { jour: 'Mar', recus: 52, traites: 50 },
+  { jour: 'Mer', recus: 43, traites: 43 },
+  { jour: 'Jeu', recus: 55, traites: 52 },
+  { jour: 'Ven', recus: 47, traites: 47 },
+  { jour: 'Sam', recus: 12, traites: 12 },
+  { jour: 'Dim', recus: 5, traites: 5 },
+]
+
+export const motifData = [
+  { name: 'Blessure', value: 42, color: '#ef4444' },
+  { name: 'Maladie', value: 28, color: '#f59e0b' },
+  { name: 'Professionnel', value: 15, color: '#3b82f6' },
+  { name: 'Familial', value: 10, color: '#a78bfa' },
+  { name: 'Autre', value: 5, color: '#6e7f9a' },
+]
+
+export const statusData = [
+  { name: 'Auto-validé', value: 60, color: '#10b981' },
+  { name: 'En attente', value: 20, color: '#f59e0b' },
+  { name: 'Escaladé', value: 13, color: '#ef4444' },
+  { name: 'Réclamation', value: 7, color: '#a78bfa' },
+]
+
+export const activityFeed: ActivityItem[] = [
+  { id: 'a1', type: 'auto_validé', message: 'Auto-validé — Fracture tibia, score 95', ref_dossier: 'REF-2026-04891', score: 95, timestamp: new Date(Date.now() - 3 * 60000).toISOString() },
+  { id: 'a2', type: 'auto_validé', message: 'Auto-validé — Entorse cheville, score 92', ref_dossier: 'REF-2026-04892', score: 92, timestamp: new Date(Date.now() - 8 * 60000).toISOString() },
+  { id: 'a3', type: 'escaladé', message: 'ESCALADÉ — Document retouché détecté, score 22', ref_dossier: 'REF-2026-04915', score: 22, timestamp: new Date(Date.now() - 15 * 60000).toISOString() },
+  { id: 'a4', type: 'auto_validé', message: 'Auto-validé — Hospitalisation urgente, score 96', ref_dossier: 'REF-2026-04895', score: 96, timestamp: new Date(Date.now() - 22 * 60000).toISOString() },
+  { id: 'a5', type: 'attente', message: 'En attente — Certificat vague, score 62', ref_dossier: 'REF-2026-04909', score: 62, timestamp: new Date(Date.now() - 35 * 60000).toISOString() },
+  { id: 'a6', type: 'auto_validé', message: 'Auto-validé — Mutation professionnelle, score 85', ref_dossier: 'REF-2026-04896', score: 85, timestamp: new Date(Date.now() - 42 * 60000).toISOString() },
+  { id: 'a7', type: 'escaladé', message: 'ESCALADÉ — Chronologie impossible, score 35', ref_dossier: 'REF-2026-04916', score: 35, timestamp: new Date(Date.now() - 55 * 60000).toISOString() },
+  { id: 'a8', type: 'auto_validé', message: 'Auto-validé — Décès d\'un proche, score 97', ref_dossier: 'REF-2026-04897', score: 97, timestamp: new Date(Date.now() - 68 * 60000).toISOString() },
+  { id: 'a9', type: 'email_envoyé', message: 'Email envoyé — Template ACC_BLE_001', ref_dossier: 'REF-2026-04891', timestamp: new Date(Date.now() - 72 * 60000).toISOString() },
+  { id: 'a10', type: 'attente', message: 'En attente — Document illisible, score 55', ref_dossier: 'REF-2026-04910', score: 55, timestamp: new Date(Date.now() - 85 * 60000).toISOString() },
+  { id: 'a11', type: 'auto_validé', message: 'Auto-validé — Grossesse, score 98', ref_dossier: 'REF-2026-04904', score: 98, timestamp: new Date(Date.now() - 95 * 60000).toISOString() },
+  { id: 'a12', type: 'réclamation', message: 'Nouvelle réclamation reçue', ref_dossier: 'REF-2026-04870', timestamp: new Date(Date.now() - 120 * 60000).toISOString() },
+]
+
+export const comparisonData = [
+  { metrique: 'Temps / dossier', avant: '12 min', apres: '1.8 min', gain: '-85%', gainColor: '#10b981' },
+  { metrique: 'Coût / dossier', avant: '4,50 €', apres: '0,03 €', gain: '-99%', gainColor: '#10b981' },
+  { metrique: 'Taux d\'erreur', avant: '~5%', apres: '<0,5%', gain: '-90%', gainColor: '#10b981' },
+  { metrique: 'Disponibilité', avant: '8h/jour', apres: '24h/24', gain: '+200%', gainColor: '#22d3ee' },
+]
