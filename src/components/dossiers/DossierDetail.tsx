@@ -1,14 +1,16 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, FileText, BarChart3, Clock, AlertTriangle, Mail, History, CheckCircle, XCircle, ArrowUpCircle } from 'lucide-react'
+import { X, FileText, BarChart3, Clock, AlertTriangle, Mail, History, CheckCircle, XCircle, ArrowUpCircle, GitBranch } from 'lucide-react'
 import { ScoreGauge } from '../ui/ScoreGauge'
 import { StatusBadge, SeverityBadge } from '../ui/StatusBadge'
+import { DecisionTree } from './DecisionTree'
 import { formatDate, formatDateTime, formatCurrency, cn, getInitials } from '../../lib/utils'
 import type { Dossier } from '../../types'
 
 const tabs = [
   { id: 'resume', label: 'Resume', icon: FileText },
   { id: 'scoring', label: 'Scoring', icon: BarChart3 },
+  { id: 'decision', label: 'Decision', icon: GitBranch },
   { id: 'timeline', label: 'Timeline', icon: Clock },
   { id: 'anomalies', label: 'Anomalies', icon: AlertTriangle },
   { id: 'email', label: 'Email', icon: Mail },
@@ -151,6 +153,16 @@ export function DossierDetail({ dossier: d, onClose }: Props) {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {tab === 'decision' && (
+            <div>
+              <div className="mb-4 p-3 rounded-lg bg-bg-surface-2 border border-border-default">
+                <p className="text-[10px] text-text-muted uppercase tracking-wider font-medium mb-1">Raisonnement de l'agent</p>
+                <p className="text-xs text-text-secondary">Chaque etape montre comment l'agent a analyse le dossier et pris sa decision.</p>
+              </div>
+              <DecisionTree dossier={d} />
             </div>
           )}
 

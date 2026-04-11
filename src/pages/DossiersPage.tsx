@@ -7,14 +7,6 @@ import { ScoreMini } from '../components/ui/ScoreGauge'
 import { formatDate, formatCurrency, getInitials, cn } from '../lib/utils'
 import type { Dossier } from '../types'
 
-const statusFilters = [
-  { id: 'all', label: 'Tous', count: 30 },
-  { id: 'traité', label: 'Auto-validés', count: 18 },
-  { id: 'attente', label: 'En attente', count: 6 },
-  { id: 'escaladé', label: 'Escaladés', count: 4 },
-  { id: 'réclamation', label: 'Réclamations', count: 2 },
-]
-
 interface DossiersPageProps {
   onViewDossier: (d: Dossier) => void
 }
@@ -23,6 +15,17 @@ export function DossiersPage({ onViewDossier }: DossiersPageProps) {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [sortBy, setSortBy] = useState<'date' | 'score' | 'montant'>('date')
+  const [loading, setLoading] = useState(true)
+
+  useState(() => { setTimeout(() => setLoading(false), 600) })
+
+  const statusFilters = useMemo(() => [
+    { id: 'all', label: 'Tous', count: mockDossiers.length },
+    { id: 'traité', label: 'Auto-validés', count: mockDossiers.filter(d => d.status === 'traité').length },
+    { id: 'attente', label: 'En attente', count: mockDossiers.filter(d => d.status === 'attente').length },
+    { id: 'escaladé', label: 'Escaladés', count: mockDossiers.filter(d => d.status === 'escaladé').length },
+    { id: 'réclamation', label: 'Réclamations', count: mockDossiers.filter(d => d.status === 'réclamation').length },
+  ], [])
   const [sortAsc, setSortAsc] = useState(false)
 
   const filtered = useMemo(() => {
@@ -119,7 +122,16 @@ export function DossiersPage({ onViewDossier }: DossiersPageProps) {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((d, i) => (
+              {loading && Array.from({ length: 8 }).map((_, i) => (
+                <tr key={`skel-${i}`} className="border-b border-border-default/50">
+                  {Array.from({ length: 8 }).map((_, j) => (
+                    <td key={j} className="px-4 py-3">
+                      <div className="skeleton h-4 rounded-md" style={{ width: j === 0 ? 120 : j === 2 ? 160 : 70, animationDelay: `${i * 0.05}s` }} />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+              {!loading && filtered.map((d, i) => (
                 <motion.tr
                   key={d.id}
                   initial={{ opacity: 0 }}

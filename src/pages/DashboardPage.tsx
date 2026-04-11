@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { FileCheck, CheckCircle, Clock, AlertTriangle, MessageSquare, Shield, TrendingUp, TrendingDown, ArrowRight } from 'lucide-react'
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
@@ -36,7 +37,35 @@ interface DashboardPageProps {
 }
 
 export function DashboardPage({ onViewDossier, onNavigate }: DashboardPageProps) {
+  const [loading, setLoading] = useState(true)
+  useState(() => { setTimeout(() => setLoading(false), 800) })
   const recentDossiers = mockDossiers.slice(0, 5)
+
+  if (loading) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-xl bg-bg-surface-1 border border-border-default p-4 space-y-3">
+              <div className="flex justify-between"><div className="skeleton h-4 w-4 rounded" /><div className="skeleton h-3 w-12 rounded" /></div>
+              <div className="skeleton h-8 w-20 rounded" />
+              <div className="skeleton h-3 w-28 rounded" />
+              <div className="skeleton h-2 w-16 rounded" />
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="rounded-xl bg-bg-surface-1 border border-border-default p-5 h-[240px]">
+              <div className="skeleton h-4 w-40 rounded mb-2" />
+              <div className="skeleton h-3 w-56 rounded mb-6" />
+              <div className="skeleton h-[160px] w-full rounded-lg" />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="p-6 space-y-6">
