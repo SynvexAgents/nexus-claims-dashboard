@@ -7,6 +7,7 @@ import { StatusBadge } from '../components/ui/StatusBadge'
 import { ScoreMini } from '../components/ui/ScoreGauge'
 import { kpiData, autoValidationData, volumeData, motifData, statusData, activityFeed, comparisonData } from '../data/mockStats'
 import { mockDossiers } from '../data/mockDossiers'
+import { HeatmapChart } from '../components/dashboard/HeatmapChart'
 import { timeAgo } from '../lib/utils'
 import type { Dossier } from '../types'
 
@@ -178,6 +179,9 @@ export function DashboardPage({ onViewDossier, onNavigate }: DashboardPageProps)
           </div>
         </motion.div>
       </div>
+
+      {/* Heatmap */}
+      <HeatmapChart />
 
       {/* Bottom Section: Activity Feed + Comparison + Recent */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

@@ -42,19 +42,86 @@ export function ChatPage() {
   }
 
   const renderContent = (content: string) => {
-    return content.split('\n').map((line, i) => {
-      let processed = line
-      // Bold
-      processed = processed.replace(/\*\*(.*?)\*\*/g, '<strong class="text-text-primary font-semibold">$1</strong>')
-      // Inline code
-      processed = processed.replace(/`(.*?)`/g, '<code class="px-1 py-0.5 rounded bg-bg-surface-3 text-accent-cyan text-[11px] font-mono">$1</code>')
+    const lines = content.split('\n')
+    const elements: React.ReactElement[] = []
+    let i = 0
 
-      if (line.startsWith('| ')) {
-        return <div key={i} className="font-mono text-[11px] text-text-secondary whitespace-pre">{line}</div>
+    while (i < lines.length) {
+      const line = lines[i]
+
+      // Detect markdown table block
+      if (line.trimStart().startsWith('|') && i + 1 < lines.length && lines[i + 1]?.includes('---')) {
+        const tableLines: string[] = []
+        while (i < lines.length && lines[i].trimStart().startsWith('|')) {
+          tableLines.push(lines[i])
+          i++
+        }
+        // Parse table
+        const headerCells = tableLines[0].split('|').filter(c => c.trim()).map(c => c.trim())
+        const dataRows = tableLines.slice(2).map(row => row.split('|').filter(c => c.trim()).map(c => c.trim()))
+
+        elements.push(
+          <div key={`table-${i}`} className="my-2 rounded-lg overflow-hidden border border-border-default">
+            <table className="w-full text-[11px]">
+              <thead>
+                <tr className="bg-bg-surface-2">
+                  {headerCells.map((h, hi) => (
+                    <th key={hi} className="px-3 py-1.5 text-left text-accent-cyan font-semibold">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {dataRows.map((row, ri) => (
+                  <tr key={ri} className="border-t border-border-default">
+                    {row.map((cell, ci) => (
+                      <td key={ci} className="px-3 py-1.5 text-text-secondary font-mono">{cell}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
+        continue
       }
-      if (line.trim() === '') return <br key={i} />
-      return <p key={i} className="leading-relaxed" dangerouslySetInnerHTML={{ __html: processed }} />
-    })
+
+      // List items
+      if (line.trimStart().startsWith('- ')) {
+        const listItems: string[] = []
+        while (i < lines.length && lines[i].trimStart().startsWith('- ')) {
+          listItems.push(lines[i].replace(/^[\s]*-\s/, ''))
+          i++
+        }
+        elements.push(
+          <ul key={`list-${i}`} className="my-1 space-y-0.5">
+            {listItems.map((item, li) => {
+              const processed = item
+                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-text-primary font-semibold">$1</strong>')
+                .replace(/`(.*?)`/g, '<code class="px-1 py-0.5 rounded bg-bg-surface-3 text-accent-cyan text-[11px] font-mono">$1</code>')
+              return (
+                <li key={li} className="flex gap-2 items-start">
+                  <span className="text-accent-blue mt-0.5">&#x2022;</span>
+                  <span dangerouslySetInnerHTML={{ __html: processed }} />
+                </li>
+              )
+            })}
+          </ul>
+        )
+        continue
+      }
+
+      // Empty line
+      if (line.trim() === '') { elements.push(<br key={`br-${i}`} />); i++; continue }
+
+      // Normal text with bold/code
+      let processed = line
+      processed = processed.replace(/\*\*(.*?)\*\*/g, '<strong class="text-text-primary font-semibold">$1</strong>')
+      processed = processed.replace(/`(.*?)`/g, '<code class="px-1 py-0.5 rounded bg-bg-surface-3 text-accent-cyan text-[11px] font-mono">$1</code>')
+      elements.push(<p key={`p-${i}`} className="leading-relaxed" dangerouslySetInnerHTML={{ __html: processed }} />)
+      i++
+    }
+
+    return elements
   }
 
   return (

@@ -1,14 +1,8 @@
 import { LayoutDashboard, FolderOpen, AlertTriangle, MessageCircle, Menu, X } from 'lucide-react'
 import { cn } from '../../lib/utils'
+import { mockDossiers } from '../../data/mockDossiers'
 import type { PageId } from '../../types'
-import { useState } from 'react'
-
-const navItems: { id: PageId; icon: typeof LayoutDashboard; label: string; badge?: number }[] = [
-  { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { id: 'dossiers', icon: FolderOpen, label: 'Dossiers', badge: 30 },
-  { id: 'anomalies', icon: AlertTriangle, label: 'Anomalies', badge: 3 },
-  { id: 'chat', icon: MessageCircle, label: 'Chat Agent' },
-]
+import { useState, useMemo } from 'react'
 
 interface SidebarProps {
   currentPage: PageId
@@ -17,6 +11,16 @@ interface SidebarProps {
 
 export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
+
+  const anomalyCount = useMemo(() => mockDossiers.filter(d => d.anomalies.length > 0).length, [])
+  const dossierCount = mockDossiers.length
+
+  const navItems: { id: PageId; icon: typeof LayoutDashboard; label: string; badge?: number; badgeColor?: string }[] = [
+    { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { id: 'dossiers', icon: FolderOpen, label: 'Dossiers', badge: dossierCount },
+    { id: 'anomalies', icon: AlertTriangle, label: 'Anomalies', badge: anomalyCount, badgeColor: 'anomalies' },
+    { id: 'chat', icon: MessageCircle, label: 'Chat Agent' },
+  ]
 
   return (
     <>
