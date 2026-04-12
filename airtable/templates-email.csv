@@ -1,0 +1,457 @@
+template_id,categorie,sous_categorie,decision_type,objet_email,corps_email,variables_requises,actif
+ACC_BLE_001,Acceptation Blessure,Fracture,acceptation,"Assur Connect — Prise en charge de votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons bien recu votre demande de remboursement concernant votre inscription a {{nom_evenement}} (dossard d'un montant de {{montant}} EUR).
+
+Suite a l'analyse de votre dossier et du certificat medical attestant d'une fracture, nous vous confirmons la prise en charge de votre remboursement.
+
+Le montant de {{montant}} EUR vous sera vire sous 10 jours ouvres sur le compte associe a votre souscription.
+
+Nous vous souhaitons un prompt retablissement.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant",true
+ACC_BLE_002,Acceptation Blessure,Entorse,acceptation,"Assur Connect — Prise en charge de votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons bien recu votre demande de remboursement pour {{nom_evenement}}.
+
+Apres examen de votre certificat medical confirmant une entorse, nous avons le plaisir de vous informer que votre dossier est accepte.
+
+Le remboursement de {{montant}} EUR sera effectue sous 10 jours ouvres.
+
+Prenez soin de vous et bon retablissement.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant",true
+ACC_BLE_003,Acceptation Blessure,Luxation,acceptation,"Assur Connect — Prise en charge de votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous accusons reception de votre demande de remboursement pour {{nom_evenement}}.
+
+Le certificat medical joint a votre dossier confirme une luxation vous empechant de participer. Votre demande est acceptee.
+
+Le remboursement de {{montant}} EUR sera effectue sous 10 jours ouvres.
+
+Nous vous souhaitons un bon retablissement.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant",true
+ACC_BLE_004,Acceptation Blessure,Dechirure musculaire,acceptation,"Assur Connect — Prise en charge de votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons etudie votre demande de remboursement pour {{nom_evenement}}.
+
+Votre certificat medical attestant d'une dechirure musculaire a ete valide. Votre dossier est accepte.
+
+Le remboursement de {{montant}} EUR vous sera verse sous 10 jours ouvres.
+
+Bon courage pour votre reeducation.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant",true
+ACC_BLE_005,Acceptation Blessure,Tendinite aigue,acceptation,"Assur Connect — Prise en charge de votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Votre demande de remboursement pour {{nom_evenement}} a ete examinee.
+
+Le certificat medical confirmant une tendinite aigue incompatible avec la pratique sportive a ete valide. Votre dossier est accepte.
+
+Le montant de {{montant}} EUR vous sera rembourse sous 10 jours ouvres.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant",true
+ACC_BLE_006,Acceptation Blessure,Commotion cerebrale,acceptation,"Assur Connect — Prise en charge urgente de votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons traite en priorite votre demande de remboursement pour {{nom_evenement}}.
+
+Le certificat medical attestant d'une commotion cerebrale a ete valide. Votre dossier est accepte sans reserve.
+
+Le remboursement de {{montant}} EUR sera effectue sous 10 jours ouvres.
+
+Nous vous souhaitons un retablissement complet. N'hesitez pas a nous contacter si vous avez besoin d'assistance.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant",true
+ACC_BLE_007,Acceptation Blessure,Blessure dos/colonne,acceptation,"Assur Connect — Prise en charge de votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons bien recu votre demande concernant {{nom_evenement}}.
+
+Le certificat medical attestant d'une pathologie dorsale vous empechant de participer a ete valide. Votre demande de remboursement est acceptee.
+
+Le montant de {{montant}} EUR vous sera verse sous 10 jours ouvres.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant",true
+ACC_BLE_008,Acceptation Blessure,Autre blessure,acceptation,"Assur Connect — Prise en charge de votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons examine votre demande de remboursement pour {{nom_evenement}}.
+
+Le justificatif medical fourni a ete valide par nos services. Votre demande est acceptee conformement a l'article 2.1 de vos conditions generales.
+
+Le remboursement de {{montant}} EUR sera effectue sous 10 jours ouvres.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant",true
+ACC_MAL_001,Acceptation Maladie,Maladie aigue,acceptation,"Assur Connect — Prise en charge de votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons bien recu votre demande de remboursement pour {{nom_evenement}}.
+
+Le certificat medical attestant d'une maladie aigue incompatible avec la participation a l'evenement a ete valide. Votre dossier est accepte.
+
+Le remboursement de {{montant}} EUR sera effectue sous 10 jours ouvres.
+
+Nous vous souhaitons un prompt retablissement.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant",true
+ACC_MAL_002,Acceptation Maladie,Hospitalisation,acceptation,"Assur Connect — Prise en charge prioritaire de votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons pris connaissance de votre hospitalisation et traite votre dossier en priorite.
+
+Votre demande de remboursement pour {{nom_evenement}} est acceptee. Le bulletin d'hospitalisation fourni confirme l'impossibilite de participer.
+
+Le montant de {{montant}} EUR vous sera rembourse sous 10 jours ouvres.
+
+Nous vous souhaitons un retablissement rapide et complet.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant",true
+ACC_MAL_003,Acceptation Maladie,Intervention chirurgicale,acceptation,"Assur Connect — Prise en charge de votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons examine votre demande de remboursement pour {{nom_evenement}}.
+
+Le certificat attestant d'une intervention chirurgicale programmee a ete valide. Votre demande est acceptee.
+
+Le remboursement de {{montant}} EUR sera effectue sous 10 jours ouvres.
+
+Nous vous souhaitons une bonne convalescence.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant",true
+ACC_MAL_004,Acceptation Maladie,Maladie contagieuse,acceptation,"Assur Connect — Prise en charge de votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons recu votre demande de remboursement pour {{nom_evenement}}.
+
+Le certificat medical confirmant une maladie contagieuse necessitant un isolement a ete valide. Votre dossier est accepte.
+
+Le remboursement de {{montant}} EUR sera effectue sous 10 jours ouvres.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant",true
+ACC_MAL_005,Acceptation Maladie,Covid/epidemie,acceptation,"Assur Connect — Prise en charge de votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons bien recu votre demande de remboursement pour {{nom_evenement}}.
+
+Le test positif que vous avez fourni confirme votre impossibilite de participer. Votre dossier est accepte conformement a nos conditions generales.
+
+Le remboursement de {{montant}} EUR sera effectue sous 10 jours ouvres.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant",true
+ACC_MAL_006,Acceptation Maladie,Autre maladie,acceptation,"Assur Connect — Prise en charge de votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons etudie votre demande de remboursement pour {{nom_evenement}}.
+
+Le justificatif medical fourni a ete valide. Votre demande est acceptee conformement a l'article 2.1 des conditions generales.
+
+Le remboursement de {{montant}} EUR sera effectue sous 10 jours ouvres.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant",true
+ACC_PRO_001,Acceptation Professionnel,Mutation/deplacement,acceptation,"Assur Connect — Prise en charge de votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons examine votre demande de remboursement pour {{nom_evenement}}.
+
+L'attestation de votre employeur confirmant une mutation/un deplacement professionnel a ete validee. Votre dossier est accepte.
+
+Le remboursement de {{montant}} EUR sera effectue sous 10 jours ouvres.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant",true
+ACC_PRO_002,Acceptation Professionnel,Convocation pro urgente,acceptation,"Assur Connect — Prise en charge de votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Votre demande de remboursement pour {{nom_evenement}} a ete examinee.
+
+L'attestation employeur confirmant une convocation professionnelle urgente a ete validee. Votre dossier est accepte.
+
+Le remboursement de {{montant}} EUR sera effectue sous 10 jours ouvres.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant",true
+ACC_PRO_003,Acceptation Professionnel,Licenciement,acceptation,"Assur Connect — Prise en charge de votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons pris connaissance de votre situation et examine votre demande pour {{nom_evenement}}.
+
+Le justificatif de fin de contrat fourni a ete valide. Votre dossier est accepte.
+
+Le remboursement de {{montant}} EUR sera effectue sous 10 jours ouvres.
+
+Nous vous souhaitons bonne chance pour la suite.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant",true
+ACC_PRO_004,Acceptation Professionnel,Autre raison pro,acceptation,"Assur Connect — Prise en charge de votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Votre demande de remboursement pour {{nom_evenement}} a ete examinee.
+
+Le justificatif professionnel fourni a ete valide. Votre demande est acceptee conformement a l'article 2.3 des conditions generales.
+
+Le remboursement de {{montant}} EUR sera effectue sous 10 jours ouvres.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant",true
+ACC_FAM_001,Acceptation Familial,Deces proche,acceptation,"Assur Connect — Prise en charge prioritaire de votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons appris le deces survenu dans votre entourage et vous adressons nos plus sinceres condoleances.
+
+Votre demande de remboursement pour {{nom_evenement}} est acceptee sans reserve. Le justificatif fourni a ete valide.
+
+Le montant de {{montant}} EUR vous sera rembourse sous 10 jours ouvres.
+
+Avec toute notre sympathie,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant",true
+ACC_FAM_002,Acceptation Familial,Hospitalisation proche,acceptation,"Assur Connect — Prise en charge de votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons pris connaissance de l'hospitalisation de votre proche et comprenons votre situation.
+
+Votre demande de remboursement pour {{nom_evenement}} est acceptee. Le justificatif d'hospitalisation a ete valide.
+
+Le remboursement de {{montant}} EUR sera effectue sous 10 jours ouvres.
+
+Nous vous souhaitons beaucoup de courage.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant",true
+ACC_FAM_003,Acceptation Familial,Grossesse/accouchement,acceptation,"Assur Connect — Prise en charge de votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Toutes nos felicitations pour cet heureux evenement !
+
+Votre demande de remboursement pour {{nom_evenement}} est acceptee. Le certificat medical confirmant la grossesse et la contre-indication sportive a ete valide.
+
+Le remboursement de {{montant}} EUR sera effectue sous 10 jours ouvres.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant",true
+ACC_FAM_004,Acceptation Familial,Convocation officielle,acceptation,"Assur Connect — Prise en charge de votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Votre demande de remboursement pour {{nom_evenement}} a ete examinee.
+
+La convocation officielle fournie a ete validee. Votre dossier est accepte conformement a l'article 2.4 des conditions generales.
+
+Le remboursement de {{montant}} EUR sera effectue sous 10 jours ouvres.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant",true
+ACC_FAM_005,Acceptation Familial,Autre raison personnelle,acceptation,"Assur Connect — Prise en charge de votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons examine votre demande de remboursement pour {{nom_evenement}}.
+
+Le justificatif personnel fourni a ete valide. Votre demande est acceptee.
+
+Le remboursement de {{montant}} EUR sera effectue sous 10 jours ouvres.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant",true
+REF_MOT_001,Refus Motif,Motif non liste dans CG,refus,"Assur Connect — Reponse a votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons examine avec attention votre demande de remboursement pour {{nom_evenement}}.
+
+Apres analyse, nous sommes au regret de vous informer que le motif invoque ({{motif}}) ne figure pas parmi les motifs couverts par les conditions generales de votre assurance annulation (article 2.1).
+
+Les motifs couverts sont : blessure, maladie, contrainte professionnelle documentee, et evenement familial grave.
+
+Vous disposez d'un droit de reclamation en repondant a cet email dans un delai de 30 jours.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant;motif",true
+REF_MOT_002,Refus Motif,Changement d'avis,refus,"Assur Connect — Reponse a votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons examine votre demande de remboursement pour {{nom_evenement}}.
+
+Le motif mentionne releve d'un changement d'avis personnel, qui n'est pas couvert par les conditions generales de votre assurance annulation (article 5.1 — Exclusions).
+
+Nous comprenons votre deception et restons a votre disposition pour toute question.
+
+Vous disposez d'un droit de reclamation en repondant a cet email dans un delai de 30 jours.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant",true
+REF_MOT_003,Refus Motif,Indisponibilite non justifiee,refus,"Assur Connect — Reponse a votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons etudie votre demande de remboursement pour {{nom_evenement}}.
+
+Le motif d'indisponibilite mentionne ne peut etre retenu en l'absence de justificatif conforme aux exigences de l'article 4.1 des conditions generales.
+
+Si vous disposez d'un justificatif complementaire, n'hesitez pas a nous le transmettre pour reexamen.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant",true
+REF_MOT_004,Refus Motif,Motif preexistant,refus,"Assur Connect — Reponse a votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons analyse votre demande de remboursement pour {{nom_evenement}}.
+
+Les elements du dossier indiquent que la pathologie invoquee etait preexistante a la date de souscription de l'assurance. Conformement a l'article 3.2 des conditions generales, les pathologies preexistantes sont exclues de la couverture.
+
+Vous disposez d'un droit de reclamation en repondant a cet email dans un delai de 30 jours.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant",true
+REF_MOT_005,Refus Motif,Autre refus motif,refus,"Assur Connect — Reponse a votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons examine votre demande de remboursement pour {{nom_evenement}}.
+
+Apres analyse approfondie, nous ne sommes malheureusement pas en mesure de donner suite a votre demande. Le motif invoque ({{motif}}) ne remplit pas les conditions prevues par les conditions generales.
+
+Vous disposez d'un droit de reclamation en repondant a cet email dans un delai de 30 jours.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant;motif",true
+REF_DEL_001,Refus Delai,Delai declaration depasse,refus,"Assur Connect — Reponse a votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons recu votre demande de remboursement pour {{nom_evenement}}.
+
+Malheureusement, votre declaration a ete effectuee au-dela du delai contractuel de {{delai}} prevu a l'article 6.2 des conditions generales. Ce delai court a compter de la survenance de l'evenement empechant votre participation.
+
+Nous ne sommes donc pas en mesure de donner suite a votre demande.
+
+Vous disposez d'un droit de reclamation en repondant a cet email dans un delai de 30 jours.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant;delai",true
+REF_DEL_002,Refus Delai,Souscription posterieure,refus,"Assur Connect — Reponse a votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons analyse votre demande de remboursement pour {{nom_evenement}}.
+
+Il apparait que la souscription de votre assurance est posterieure a la date de l'evenement empechant votre participation. Conformement a l'article 1.3 des conditions generales, l'assurance doit etre souscrite anterieurement a la survenance du sinistre.
+
+Nous ne sommes donc pas en mesure de donner suite a votre demande.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant",true
+REF_DEL_003,Refus Delai,Documents non fournis,refus,"Assur Connect — Reponse a votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons examine votre demande de remboursement pour {{nom_evenement}}.
+
+Malgre notre demande de complements, les justificatifs requis n'ont pas ete transmis dans le delai imparti de 15 jours (article 4.2 des conditions generales).
+
+Votre dossier est donc cloture. Si vous retrouvez les documents, vous pouvez nous les transmettre pour reouverture.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant",true
+REF_DEL_004,Refus Delai,Procedure non respectee,refus,"Assur Connect — Reponse a votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons etudie votre demande de remboursement pour {{nom_evenement}}.
+
+La procedure de declaration prevue par les conditions generales n'a pas ete respectee (article 6.1). Pour etre recevable, votre demande doit etre accompagnee des justificatifs requis et transmise via les canaux prevus.
+
+Nous restons a votre disposition pour vous guider dans la demarche.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;montant",true
+CMP_001,Complement,Certificat medical manquant,complement,"Assur Connect — Complement necessaire pour votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons bien recu votre demande de remboursement pour {{nom_evenement}}.
+
+Pour finaliser l'etude de votre dossier, nous avons besoin du document suivant :
+- Certificat medical precisant le diagnostic, la date de survenue et la duree d'indisponibilite
+
+Merci de nous transmettre ce document dans un delai de 15 jours en repondant a cet email.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement",true
+CMP_002,Complement,Attestation employeur manquante,complement,"Assur Connect — Complement necessaire pour votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons bien recu votre demande de remboursement pour {{nom_evenement}}.
+
+Pour finaliser l'etude de votre dossier, nous avons besoin du document suivant :
+- Attestation de votre employeur sur papier a en-tete, precisant les dates et le motif de votre indisponibilite
+
+Merci de nous transmettre ce document dans un delai de 15 jours en repondant a cet email.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement",true
+CMP_003,Complement,Justificatif incomplet,complement,"Assur Connect — Complement necessaire pour votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons bien recu votre demande de remboursement pour {{nom_evenement}}.
+
+Le justificatif transmis est incomplet. Pour poursuivre l'etude de votre dossier, nous avons besoin de :
+- {{document_manquant}}
+
+Merci de nous transmettre ce complement dans un delai de 15 jours en repondant a cet email.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;document_manquant",true
+CMP_004,Complement,Document illisible,complement,"Assur Connect — Document illisible — Dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons bien recu votre demande de remboursement pour {{nom_evenement}}.
+
+Malheureusement, le document joint a votre dossier est illisible (qualite insuffisante, image floue ou tronquee).
+
+Pourriez-vous nous renvoyer une version lisible (scan ou photo nette du document complet) dans un delai de 15 jours ?
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement",true
+CMP_005,Complement,Piece supplementaire requise,complement,"Assur Connect — Piece complementaire requise — Dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons examine votre demande de remboursement pour {{nom_evenement}}.
+
+Pour completer votre dossier, nous avons besoin d'une piece supplementaire :
+- {{document_manquant}}
+
+Ceci nous permettra de finaliser l'etude de votre demande dans les meilleurs delais. Merci de nous transmettre ce document sous 15 jours.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;nom_evenement;document_manquant",true
+REC_001,Reclamation,Confirmation decision,reclamation,"Assur Connect — Suite a votre reclamation — Dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons pris connaissance de votre reclamation concernant le dossier {{ref_dossier}}.
+
+Apres reexamen approfondi de votre dossier, nous vous confirmons notre decision initiale. Celle-ci est fondee sur {{article_cg}} des conditions generales de votre contrat.
+
+Nous comprenons votre frustration et restons a votre disposition pour toute question complementaire.
+
+Si vous souhaitez poursuivre votre reclamation, vous pouvez saisir le mediateur de l'assurance.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;article_cg",true
+REC_002,Reclamation,Revision favorable,reclamation,"Assur Connect — Revision de votre dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Suite a votre reclamation concernant le dossier {{ref_dossier}}, nous avons procede a un reexamen complet de votre demande.
+
+Apres analyse complementaire, nous avons decide de reviser notre decision initiale en votre faveur. Votre dossier est desormais accepte.
+
+Le remboursement de {{montant}} EUR sera effectue sous 10 jours ouvres.
+
+Nous vous prions de nous excuser pour la gene occasionnee.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;montant",true
+REC_003,Reclamation,Explication detaillee,reclamation,"Assur Connect — Explication detaillee — Dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons bien recu votre reclamation concernant le dossier {{ref_dossier}} et comprenons votre besoin d'explications.
+
+Voici le detail de notre decision :
+
+La demande a ete refusee sur la base de {{article_cg}} des conditions generales, qui prevoit que {{motif}}. Les elements de votre dossier ne remplissent pas les conditions requises pour les raisons suivantes : le justificatif transmis ne correspond pas aux criteres d'eligibilite definis contractuellement.
+
+Si vous disposez d'elements nouveaux, n'hesitez pas a nous les transmettre pour reexamen.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;article_cg;motif",true
+REC_004,Reclamation,Transmission superviseur,reclamation,"Assur Connect — Transmission de votre reclamation — Dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Nous avons bien recu votre reclamation concernant le dossier {{ref_dossier}}.
+
+Compte tenu de la nature de votre demande, nous avons transmis votre dossier a notre service supervision pour un examen approfondi.
+
+Vous recevrez une reponse detaillee dans un delai de 5 jours ouvres.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier",true
+REC_005,Reclamation,Cloture reclamation,reclamation,"Assur Connect — Cloture de votre reclamation — Dossier {{ref_dossier}}","Cher(e) {{nom_assure}},
+
+Suite aux echanges concernant votre dossier {{ref_dossier}}, nous vous informons de la cloture de votre reclamation.
+
+La decision finale est : {{motif}}.
+
+Si vous souhaitez contester cette decision, vous pouvez saisir le Mediateur de l'Assurance dans un delai de 2 mois : La Mediation de l'Assurance — TSA 50110 — 75441 Paris Cedex 09.
+
+Cordialement,
+L'equipe Assur Connect — BEsafe","nom_assure;ref_dossier;motif",true

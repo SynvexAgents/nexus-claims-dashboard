@@ -1,0 +1,31 @@
+email_assure,nom,nb_demandes_total,nb_demandes_6mois,montant_total_rembourse,flag_suspect,notes_gestionnaire
+g.mercier@email.fr,Gabriel Mercier,1,1,189.00,false,
+lea.fontaine@gmail.com,Lea Fontaine,1,1,85.00,false,
+hugo.dlx@outlook.fr,Hugo Delacroix,1,1,145.00,false,
+c.renault@proton.me,Camille Renault,1,1,120.00,false,
+antoine.fabre@free.fr,Antoine Fabre,1,1,350.00,false,
+sarah.lemoine@corp.fr,Sarah Lemoine,1,1,95.00,false,
+t.giraud@wanadoo.fr,Thomas Giraud,1,1,110.00,false,
+marine.chev@hotmail.com,Marine Chevalier,1,1,45.00,false,
+lucas.b@gmail.com,Lucas Barbier,1,1,420.00,false,
+emma.r@icloud.com,Emma Rousseau,1,1,75.00,false,
+j.morel@sfr.fr,Julien Morel,2,1,310.00,false,2eme demande — 1ere il y a 14 mois (acceptee)
+chloe.p@yahoo.fr,Chloe Perrin,1,1,65.00,false,
+max.duval@outlook.fr,Maxime Duval,1,1,175.00,false,
+ines.leroy@gmail.com,Ines Leroy,1,1,130.00,false,
+romain.p@laposte.net,Romain Petit,1,1,280.00,false,
+manon.b@gmail.com,Manon Bernard,1,1,95.00,false,
+n.fournier@orange.fr,Nicolas Fournier,1,1,70.00,false,
+oceane.m@live.fr,Oceane Moreau,1,1,55.00,false,
+a.blanc@pm.me,Adrien Blanc,1,1,0.00,false,
+laura.martin@gmail.com,Laura Martin,1,1,0.00,false,
+b.robert@outlook.fr,Bastien Robert,2,1,120.00,false,1ere demande acceptee il y a 8 mois
+p.simon@laposte.net,Pauline Simon,1,1,0.00,false,
+flo.michel@free.fr,Florian Michel,1,1,0.00,false,
+amelie.g@proton.me,Amelie Garcia,1,1,0.00,false,
+k.dupont@gmail.com,Kevin Dupont,4,3,450.00,true,SUSPECT — 3 demandes en 6 mois. Derniere : document retouche. Pattern recurrent motif blessure.
+s.lambert@yahoo.fr,Sophie Lambert,1,1,0.00,true,SUSPECT — Annulation anterieure a la souscription. Chronologie impossible.
+y.lefevre@hotmail.fr,Yannick Lefevre,4,2,680.00,true,SUSPECT — 4eme demande en 12 mois. Document falsifie. Toujours motif professionnel.
+nadia.b@gmail.com,Nadia Bonnet,2,2,75.00,true,SUSPECT — Souscription J-1 puis annulation immediate. Pattern souscription opportuniste.
+marc.dubois@orange.fr,Marc Dubois,1,1,0.00,false,Reclamation en cours — refus motif non couvert
+clara.vasseur@gmail.com,Clara Vasseur,1,1,0.00,false,Reclamation en cours — delai depasse
