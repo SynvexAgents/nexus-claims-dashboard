@@ -1,0 +1,86 @@
+{
+  "name": "W6 — Rapport hebdomadaire",
+  "active": false,
+  "nodes": [
+    {
+      "id": "w6-cron",
+      "name": "CRON Lundi 8h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "parameters": {
+        "rule": { "interval": [{ "field": "cronExpression", "expression": "0 8 * * 1" }] }
+      }
+    },
+    {
+      "id": "w6-query-dossiers",
+      "name": "Query Dossiers Semaine",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [500, 300],
+      "parameters": {
+        "operation": "search",
+        "base": { "value": "AIRTABLE_BASE_ID", "mode": "id" },
+        "table": { "value": "DOSSIERS_TABLE_ID", "mode": "id" },
+        "filterByFormula": "=IS_AFTER({date_reception}, DATEADD(TODAY(), -7, 'days'))",
+        "returnAll": true
+      },
+      "credentials": { "airtableTokenApi": { "id": "AIRTABLE_CRED_ID", "name": "Airtable Nexus" } }
+    },
+    {
+      "id": "w6-build-stats",
+      "name": "Compute Weekly Stats",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 300],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all().map(i => i.json);\n\nconst total = items.length;\nconst autoValides = items.filter(i => i.status === 'traite' || i.decision === 'auto_valider').length;\nconst attente = items.filter(i => i.status === 'attente').length;\nconst escalades = items.filter(i => i.status === 'escalade').length;\nconst reclamations = items.filter(i => i.status === 'reclamation').length;\nconst tauxAuto = total > 0 ? ((autoValides / total) * 100).toFixed(1) : 0;\n\nconst motifs = {};\nfor (const d of items) {\n  const m = d.motif_declare || 'Inconnu';\n  motifs[m] = (motifs[m] || 0) + 1;\n}\n\nconst anomalies = items.filter(d => {\n  try { return JSON.parse(d.anomalies || '[]').length > 0; } catch { return false; }\n});\n\nconst scoreMoyen = total > 0 ? (items.reduce((s, d) => s + (d.score_confiance || 0), 0) / total).toFixed(0) : 0;\n\nreturn [{ json: {\n  total, autoValides, attente, escalades, reclamations, tauxAuto,\n  motifs, nbAnomalies: anomalies.length, scoreMoyen,\n  dateDebut: new Date(Date.now() - 7*24*60*60*1000).toISOString().split('T')[0],\n  dateFin: new Date().toISOString().split('T')[0]\n}}];"
+      }
+    },
+    {
+      "id": "w6-claude-rapport",
+      "name": "Claude Synthèse",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1050, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "anthropic-version", "value": "2023-06-01" }, { "name": "content-type", "value": "application/json" }] },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2048, system: 'Tu es Nexus, l\\'agent IA d\\'Assur Connect. Genere un rapport hebdomadaire clair et structure en HTML pour email. Utilise des tableaux, des couleurs, des indicateurs. Ton professionnel.', messages: [{ role: 'user', content: `Genere le rapport hebdomadaire du ${$json.dateDebut} au ${$json.dateFin}.\\n\\nSTATISTIQUES :\\n- Total dossiers : ${$json.total}\\n- Auto-valides : ${$json.autoValides} (${$json.tauxAuto}%)\\n- En attente : ${$json.attente}\\n- Escalades : ${$json.escalades}\\n- Reclamations : ${$json.reclamations}\\n- Anomalies detectees : ${$json.nbAnomalies}\\n- Score moyen : ${$json.scoreMoyen}/100\\n- Repartition motifs : ${JSON.stringify($json.motifs)}\\n\\nGenere un email HTML structure avec KPIs, tendances, et recommandations.` }] }) }}"
+      },
+      "credentials": { "httpHeaderAuth": { "id": "CLAUDE_CRED_ID", "name": "Claude API Key" } }
+    },
+    {
+      "id": "w6-send-rapport",
+      "name": "Send Rapport Nathalie",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [1350, 300],
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "toRecipients": "nathalie@assur-connect.com",
+        "subject": "=Nexus Claims — Rapport hebdomadaire {{ $node['Compute Weekly Stats'].json.dateDebut }} au {{ $node['Compute Weekly Stats'].json.dateFin }}",
+        "bodyContent": "={{ $json.content?.[0]?.text || 'Erreur generation rapport' }}",
+        "bodyContentType": "html",
+        "saveToSentItems": true
+      },
+      "credentials": { "microsoftOutlookOAuth2Api": { "id": "OUTLOOK_CRED_ID", "name": "Outlook Assur Connect" } }
+    }
+  ],
+  "connections": {
+    "CRON Lundi 8h": { "main": [[{ "node": "Query Dossiers Semaine", "type": "main", "index": 0 }]] },
+    "Query Dossiers Semaine": { "main": [[{ "node": "Compute Weekly Stats", "type": "main", "index": 0 }]] },
+    "Compute Weekly Stats": { "main": [[{ "node": "Claude Synthèse", "type": "main", "index": 0 }]] },
+    "Claude Synthèse": { "main": [[{ "node": "Send Rapport Nathalie", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

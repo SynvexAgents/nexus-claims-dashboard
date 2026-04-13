@@ -1,0 +1,149 @@
+{
+  "name": "W5 — Gestionnaire réclamations",
+  "active": false,
+  "nodes": [
+    {
+      "id": "w5-trigger",
+      "name": "Trigger Réclamation (Outlook)",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "parameters": {
+        "resource": "message",
+        "operation": "getAll",
+        "returnAll": false,
+        "limit": 10,
+        "filters": { "isRead": false }
+      },
+      "credentials": { "microsoftOutlookOAuth2Api": { "id": "OUTLOOK_CRED_ID", "name": "Outlook Assur Connect" } }
+    },
+    {
+      "id": "w5-detect-reclamation",
+      "name": "IF Est Réclamation",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [500, 300],
+      "parameters": {
+        "conditions": {
+          "combinator": "or",
+          "conditions": [
+            { "id": "subj", "leftValue": "={{ ($json.subject || '').toLowerCase() }}", "rightValue": "reclamation", "operator": { "type": "string", "operation": "contains" } },
+            { "id": "subj2", "leftValue": "={{ ($json.subject || '').toLowerCase() }}", "rightValue": "contestation", "operator": { "type": "string", "operation": "contains" } },
+            { "id": "body", "leftValue": "={{ ($json.body?.content || '').toLowerCase() }}", "rightValue": "je conteste", "operator": { "type": "string", "operation": "contains" } }
+          ]
+        }
+      }
+    },
+    {
+      "id": "w5-find-dossier",
+      "name": "Find Dossier Original",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 200],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const item = $input.item.json;\nconst text = (item.subject || '') + ' ' + (item.body?.content || '');\nconst refMatch = text.match(/REF[-\\s]?\\d{4}[-\\s]?\\d{5}/i);\nconst email = item.from?.emailAddress?.address || '';\n\nreturn { json: { ref_detectee: refMatch ? refMatch[0] : null, email_reclamant: email, thread: item.body?.content || '', subject: item.subject, message_id: item.id } };"
+      }
+    },
+    {
+      "id": "w5-load-dossier",
+      "name": "Load Dossier Airtable",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [1000, 200],
+      "parameters": {
+        "operation": "search",
+        "base": { "value": "AIRTABLE_BASE_ID", "mode": "id" },
+        "table": { "value": "DOSSIERS_TABLE_ID", "mode": "id" },
+        "filterByFormula": "=OR({email_assure} = '{{ $json.email_reclamant }}', SEARCH('{{ $json.ref_detectee }}', {ref_dossier}))"
+      },
+      "credentials": { "airtableTokenApi": { "id": "AIRTABLE_CRED_ID", "name": "Airtable Nexus" } }
+    },
+    {
+      "id": "w5-load-cg",
+      "name": "Load CG",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [1000, 400],
+      "parameters": {
+        "operation": "search",
+        "base": { "value": "AIRTABLE_BASE_ID", "mode": "id" },
+        "table": { "value": "CG_TABLE_ID", "mode": "id" },
+        "returnAll": true
+      },
+      "credentials": { "airtableTokenApi": { "id": "AIRTABLE_CRED_ID", "name": "Airtable Nexus" } }
+    },
+    {
+      "id": "w5-claude-reclamation",
+      "name": "Claude Analyse Réclamation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1300, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "anthropic-version", "value": "2023-06-01" }, { "name": "content-type", "value": "application/json" }] },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2048, system: \"Tu es l'agent de reclamations d'Assur Connect. Analyse la reclamation, verifie si la decision initiale etait correcte, recommande : confirmer_decision, reviser_decision, ou escalader_superviseur. Sois impartial. Cite les articles CG. REPONSE : JSON valide avec motif_reclamation, reclamation_fondee, analyse, decision_initiale_correcte, erreur_identifiee, action_recommandee, reponse_proposee, justification_cg, nouveau_score.\", messages: [{ role: 'user', content: `RECLAMATION :\\n${$node['Find Dossier Original'].json.thread}\\n\\nDOSSIER ORIGINAL :\\n${JSON.stringify($node['Load Dossier Airtable'].json)}\\n\\nCG :\\n${JSON.stringify($node['Load CG'].json)}` }] }) }}"
+      },
+      "credentials": { "httpHeaderAuth": { "id": "CLAUDE_CRED_ID", "name": "Claude API Key" } }
+    },
+    {
+      "id": "w5-parse-action",
+      "name": "Parse Action Réclamation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1550, 300],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const response = $input.item.json;\nlet result = {};\ntry {\n  const text = response.content?.[0]?.text || '';\n  const m = text.match(/\\{[\\s\\S]*\\}/);\n  if (m) result = JSON.parse(m[0]);\n} catch(e) { result = { action_recommandee: 'escalader_superviseur' }; }\n\nreturn { json: { ...result, dossier_id: $node['Load Dossier Airtable'].json?.id } };"
+      }
+    },
+    {
+      "id": "w5-switch",
+      "name": "Switch Action",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [1800, 300],
+      "parameters": {
+        "mode": "rules",
+        "rules": { "values": [
+          { "conditions": { "combinator": "and", "conditions": [{ "leftValue": "={{ $json.action_recommandee }}", "rightValue": "confirmer_decision", "operator": { "type": "string", "operation": "equals" } }] }, "renameOutput": true, "outputKey": "Confirmer" },
+          { "conditions": { "combinator": "and", "conditions": [{ "leftValue": "={{ $json.action_recommandee }}", "rightValue": "reviser_decision", "operator": { "type": "string", "operation": "equals" } }] }, "renameOutput": true, "outputKey": "Reviser" }
+        ] },
+        "options": { "fallbackOutput": "extra" }
+      }
+    },
+    {
+      "id": "w5-update-reclamation",
+      "name": "Update Status Réclamation",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [2100, 300],
+      "parameters": {
+        "operation": "update",
+        "base": { "value": "AIRTABLE_BASE_ID", "mode": "id" },
+        "table": { "value": "DOSSIERS_TABLE_ID", "mode": "id" },
+        "id": "={{ $json.dossier_id }}",
+        "columns": { "mappingMode": "defineBelow", "value": { "status": "reclamation" } }
+      },
+      "credentials": { "airtableTokenApi": { "id": "AIRTABLE_CRED_ID", "name": "Airtable Nexus" } }
+    }
+  ],
+  "connections": {
+    "Trigger Réclamation (Outlook)": { "main": [[{ "node": "IF Est Réclamation", "type": "main", "index": 0 }]] },
+    "IF Est Réclamation": { "main": [[{ "node": "Find Dossier Original", "type": "main", "index": 0 }], []] },
+    "Find Dossier Original": { "main": [[{ "node": "Load Dossier Airtable", "type": "main", "index": 0 }, { "node": "Load CG", "type": "main", "index": 0 }]] },
+    "Load Dossier Airtable": { "main": [[{ "node": "Claude Analyse Réclamation", "type": "main", "index": 0 }]] },
+    "Load CG": { "main": [[{ "node": "Claude Analyse Réclamation", "type": "main", "index": 0 }]] },
+    "Claude Analyse Réclamation": { "main": [[{ "node": "Parse Action Réclamation", "type": "main", "index": 0 }]] },
+    "Parse Action Réclamation": { "main": [[{ "node": "Switch Action", "type": "main", "index": 0 }]] },
+    "Switch Action": { "main": [[{ "node": "Update Status Réclamation", "type": "main", "index": 0 }], [{ "node": "Update Status Réclamation", "type": "main", "index": 0 }], [{ "node": "Update Status Réclamation", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

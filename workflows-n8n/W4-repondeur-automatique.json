@@ -1,0 +1,132 @@
+{
+  "name": "W4 — Répondeur automatique",
+  "active": false,
+  "nodes": [
+    {
+      "id": "w4-webhook",
+      "name": "Receive from W3",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "parameters": { "httpMethod": "POST", "path": "nexus-w4-reponse", "responseMode": "onReceived" },
+      "webhookId": "nexus-w4-reponse"
+    },
+    {
+      "id": "w4-load-dossier",
+      "name": "Load Dossier",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [500, 300],
+      "parameters": {
+        "operation": "get",
+        "base": { "value": "AIRTABLE_BASE_ID", "mode": "id" },
+        "table": { "value": "DOSSIERS_TABLE_ID", "mode": "id" },
+        "id": "={{ $json.dossier_id }}"
+      },
+      "credentials": { "airtableTokenApi": { "id": "AIRTABLE_CRED_ID", "name": "Airtable Nexus" } }
+    },
+    {
+      "id": "w4-load-template",
+      "name": "Load Template Email",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [500, 500],
+      "parameters": {
+        "operation": "search",
+        "base": { "value": "AIRTABLE_BASE_ID", "mode": "id" },
+        "table": { "value": "TEMPLATES_TABLE_ID", "mode": "id" },
+        "filterByFormula": "={template_id} = '{{ $json.template_id }}'"
+      },
+      "credentials": { "airtableTokenApi": { "id": "AIRTABLE_CRED_ID", "name": "Airtable Nexus" } }
+    },
+    {
+      "id": "w4-build-prompt",
+      "name": "Build Personnalisation Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [800, 400],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const dossier = $node['Load Dossier'].json;\nconst template = $node['Load Template Email'].json;\n\nconst userPrompt = `TEMPLATE A PERSONNALISER :\\nTemplate ID : ${template.template_id}\\nObjet : ${template.objet_email}\\nCorps : ${template.corps_email}\\n\\nDONNEES DU DOSSIER :\\nNom : ${dossier.nom_assure}\\nReference : ${dossier.ref_dossier || dossier.id}\\nMontant dossard : ${dossier.montant_dossard} EUR\\nEvenement : ${dossier.nom_evenement}\\nDate evenement : ${dossier.date_evenement}\\nMotif : ${dossier.motif_declare} — ${dossier.motif_detail}\\nDecision : ${dossier.decision}\\n\\nPersonnalise le template et reponds en JSON avec objet_email et corps_email.`;\n\nreturn [{ json: {\n  dossier_id: dossier.id,\n  email_assure: dossier.email_assure,\n  template_id: template.template_id,\n  claude_body: {\n    model: 'claude-sonnet-4-20250514',\n    max_tokens: 1024,\n    system: \"Tu es le redacteur email d'Assur Connect. Personnalise le template avec les donnees du dossier. Ne modifie JAMAIS la decision. Remplace toutes les variables {{xxx}}. L'email doit etre pret a envoyer. REPONSE : JSON avec objet_email et corps_email.\",\n    messages: [{ role: 'user', content: userPrompt }]\n  }\n}}];"
+      }
+    },
+    {
+      "id": "w4-claude-api",
+      "name": "Claude Personnalisation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1050, 400],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "anthropic-version", "value": "2023-06-01" }, { "name": "content-type", "value": "application/json" }] },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.claude_body) }}"
+      },
+      "credentials": { "httpHeaderAuth": { "id": "CLAUDE_CRED_ID", "name": "Claude API Key" } }
+    },
+    {
+      "id": "w4-parse-email",
+      "name": "Parse Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1300, 400],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const response = $input.item.json;\nconst prev = $node['Build Personnalisation Prompt'].json;\n\nlet email = { objet_email: '', corps_email: '' };\ntry {\n  const text = response.content?.[0]?.text || '';\n  const jsonMatch = text.match(/\\{[\\s\\S]*\\}/);\n  if (jsonMatch) email = JSON.parse(jsonMatch[0]);\n} catch (e) {\n  email.corps_email = 'Erreur generation email: ' + e.message;\n}\n\nreturn { json: { ...prev, objet_email: email.objet_email, corps_email: email.corps_email } };"
+      }
+    },
+    {
+      "id": "w4-send-email",
+      "name": "Send Email Outlook",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [1550, 400],
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "toRecipients": "={{ $json.email_assure }}",
+        "subject": "={{ $json.objet_email }}",
+        "bodyContent": "={{ $json.corps_email.replace(/\\n/g, '<br>') }}",
+        "bodyContentType": "html",
+        "saveToSentItems": true
+      },
+      "credentials": { "microsoftOutlookOAuth2Api": { "id": "OUTLOOK_CRED_ID", "name": "Outlook Assur Connect" } }
+    },
+    {
+      "id": "w4-update-airtable",
+      "name": "Update Dossier Traité",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [1800, 400],
+      "parameters": {
+        "operation": "update",
+        "base": { "value": "AIRTABLE_BASE_ID", "mode": "id" },
+        "table": { "value": "DOSSIERS_TABLE_ID", "mode": "id" },
+        "id": "={{ $json.dossier_id }}",
+        "columns": { "mappingMode": "defineBelow", "value": {
+          "status": "traite",
+          "date_reponse": "={{ new Date().toISOString() }}",
+          "email_envoye": "={{ $json.corps_email }}",
+          "template_utilise": "={{ $json.template_id }}"
+        }}
+      },
+      "credentials": { "airtableTokenApi": { "id": "AIRTABLE_CRED_ID", "name": "Airtable Nexus" } }
+    }
+  ],
+  "connections": {
+    "Receive from W3": { "main": [[{ "node": "Load Dossier", "type": "main", "index": 0 }, { "node": "Load Template Email", "type": "main", "index": 0 }]] },
+    "Load Dossier": { "main": [[{ "node": "Build Personnalisation Prompt", "type": "main", "index": 0 }]] },
+    "Load Template Email": { "main": [[{ "node": "Build Personnalisation Prompt", "type": "main", "index": 0 }]] },
+    "Build Personnalisation Prompt": { "main": [[{ "node": "Claude Personnalisation", "type": "main", "index": 0 }]] },
+    "Claude Personnalisation": { "main": [[{ "node": "Parse Email", "type": "main", "index": 0 }]] },
+    "Parse Email": { "main": [[{ "node": "Send Email Outlook", "type": "main", "index": 0 }]] },
+    "Send Email Outlook": { "main": [[{ "node": "Update Dossier Traité", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

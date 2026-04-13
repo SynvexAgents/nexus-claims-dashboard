@@ -1,0 +1,288 @@
+{
+  "name": "W3 — Vérificateur & Scoreur",
+  "active": false,
+  "nodes": [
+    {
+      "id": "w3-webhook",
+      "name": "Receive from W2",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "nexus-w3-scoring",
+        "responseMode": "onReceived"
+      },
+      "webhookId": "nexus-w3-scoring"
+    },
+    {
+      "id": "w3-load-dossier",
+      "name": "Load Dossier",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [500, 300],
+      "parameters": {
+        "operation": "get",
+        "base": { "value": "AIRTABLE_BASE_ID", "mode": "id" },
+        "table": { "value": "DOSSIERS_TABLE_ID", "mode": "id" },
+        "id": "={{ $json.dossier_id }}"
+      },
+      "credentials": {
+        "airtableTokenApi": { "id": "AIRTABLE_CRED_ID", "name": "Airtable Nexus" }
+      }
+    },
+    {
+      "id": "w3-load-cg",
+      "name": "Load CG",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [500, 500],
+      "parameters": {
+        "operation": "search",
+        "base": { "value": "AIRTABLE_BASE_ID", "mode": "id" },
+        "table": { "value": "CG_TABLE_ID", "mode": "id" },
+        "returnAll": true
+      },
+      "credentials": {
+        "airtableTokenApi": { "id": "AIRTABLE_CRED_ID", "name": "Airtable Nexus" }
+      }
+    },
+    {
+      "id": "w3-load-historique",
+      "name": "Load Historique Assuré",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [500, 100],
+      "parameters": {
+        "operation": "search",
+        "base": { "value": "AIRTABLE_BASE_ID", "mode": "id" },
+        "table": { "value": "HISTORIQUE_TABLE_ID", "mode": "id" },
+        "filterByFormula": "={email_assure} = '{{ $node[\"Load Dossier\"].json.email_assure }}'"
+      },
+      "credentials": {
+        "airtableTokenApi": { "id": "AIRTABLE_CRED_ID", "name": "Airtable Nexus" }
+      }
+    },
+    {
+      "id": "w3-build-prompt",
+      "name": "Build Scoring Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [800, 300],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const dossier = $node['Load Dossier'].json;\nconst cgRecords = $node['Load CG'].json || [];\nconst historique = $node['Load Historique Assuré'].json || {};\n\nconst cg_text = (Array.isArray(cgRecords) ? cgRecords : [cgRecords])\n  .map(r => `${r.article}: ${r.titre} — ${r.contenu}`)\n  .join('\\n');\n\nconst userPrompt = `DOSSIER A VERIFIER :\n\nReference : ${dossier.ref_dossier || dossier.id}\nAssure : ${dossier.nom_assure} (${dossier.email_assure})\nMontant dossard : ${dossier.montant_dossard} EUR\nDate souscription : ${dossier.date_souscription}\nDate evenement : ${dossier.date_evenement}\nDate annulation : ${dossier.date_annulation}\nMotif declare : ${dossier.motif_declare}\nDetail motif : ${dossier.motif_detail}\nPlateforme : ${dossier.plateforme}\n\nANALYSE DOCUMENTAIRE (W2) :\n${dossier.document_analysis || 'Aucun document analyse'}\n\nCONDITIONS GENERALES :\n${cg_text}\n\nHISTORIQUE ASSURE :\n- Demandes totales : ${historique.nb_demandes_total || 0}\n- Demandes 6 derniers mois : ${historique.nb_demandes_6mois || 0}\n- Montant total rembourse : ${historique.montant_total_rembourse || 0} EUR\n- Flag suspect : ${historique.flag_suspect || false}\n- Notes : ${historique.notes_gestionnaire || 'Aucune'}\n\nCORRECTIONS PASSEES :\n${dossier.correction_humaine || 'Aucune correction precedente'}\n\nReponds en JSON valide.`;\n\nreturn [{\n  json: {\n    dossier_id: dossier.id,\n    claude_body: {\n      model: 'claude-sonnet-4-20250514',\n      max_tokens: 2048,\n      system: \"Tu es l'agent de verification et de scoring d'Assur Connect. Tu traites des demandes de remboursement d'assurance annulation de dossards sportifs.\\n\\nMETHODE DE SCORING :\\nScore de base = 100. Chaque anomalie deduit des points.\\n- Score >= 75 → auto_valider\\n- Score 40-74 → attente\\n- Score < 40 → escalader\\n\\nGRILLE DE DEDUCTIONS :\\n- Document falsifie/retouche: -70 (critique)\\n- Annulation avant souscription: -60 (critique)\\n- Motif declare ≠ certificat: -50 (elevee)\\n- Delai declaration depasse (>5j): -40 (elevee)\\n- Document illisible: -30 (elevee)\\n- Certificat posterieur a la demande: -30 (moyenne)\\n- Aucun justificatif fourni: -20 (elevee)\\n- Souscription <48h avant annulation: -20 (moyenne)\\n- 3+ demandes en 6 mois: -25 (moyenne)\\n- Pattern recurrent: -35 (elevee)\\n- Certificat vague (pas diagnostic): -15 (moyenne)\\n- Certificat non-medecin (kine): -25 (moyenne)\\n\\nSELECTION TEMPLATE :\\nAcceptation: ACC_BLE_001-008, ACC_MAL_001-006, ACC_PRO_001-004, ACC_FAM_001-005\\nRefus: REF_MOT_001-005, REF_DEL_001-004\\nComplement: CMP_001-005\\n\\nREPONSE : JSON valide avec verifications, anomalies_detectees, score_confiance, score_detail, decision, raison_decision, template_email_suggere, points_verification_humaine, commentaire_gestionnaire, references_cg.\",\n      messages: [{ role: 'user', content: userPrompt }]\n    }\n  }\n}];"
+      }
+    },
+    {
+      "id": "w3-claude-api",
+      "name": "Claude Scoring API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1100, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "anthropic-version", "value": "2023-06-01" },
+            { "name": "content-type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.claude_body) }}"
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "CLAUDE_CRED_ID", "name": "Claude API Key" }
+      }
+    },
+    {
+      "id": "w3-parse-decision",
+      "name": "Parse Decision",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1350, 300],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const response = $input.item.json;\nconst dossier_id = $node['Build Scoring Prompt'].json.dossier_id;\n\nlet result = null;\ntry {\n  const text = response.content?.[0]?.text || '';\n  const jsonMatch = text.match(/\\{[\\s\\S]*\\}/);\n  if (jsonMatch) result = JSON.parse(jsonMatch[0]);\n} catch (e) {\n  result = { score_confiance: 50, decision: 'attente', raison_decision: 'Erreur parsing: ' + e.message, anomalies_detectees: [] };\n}\n\nreturn {\n  json: {\n    dossier_id,\n    score_confiance: result.score_confiance || 50,\n    decision: result.decision || 'attente',\n    raison_decision: result.raison_decision || '',\n    anomalies: JSON.stringify(result.anomalies_detectees || []),\n    template_email_suggere: result.template_email_suggere || null,\n    commentaire_gestionnaire: result.commentaire_gestionnaire || null,\n    score_detail: JSON.stringify(result.score_detail || {})\n  }\n};"
+      }
+    },
+    {
+      "id": "w3-update-airtable",
+      "name": "Update Dossier Score",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [1600, 300],
+      "parameters": {
+        "operation": "update",
+        "base": { "value": "AIRTABLE_BASE_ID", "mode": "id" },
+        "table": { "value": "DOSSIERS_TABLE_ID", "mode": "id" },
+        "id": "={{ $json.dossier_id }}",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "score_confiance": "={{ $json.score_confiance }}",
+            "decision": "={{ $json.decision }}",
+            "raison_decision": "={{ $json.raison_decision }}",
+            "anomalies": "={{ $json.anomalies }}"
+          }
+        }
+      },
+      "credentials": {
+        "airtableTokenApi": { "id": "AIRTABLE_CRED_ID", "name": "Airtable Nexus" }
+      }
+    },
+    {
+      "id": "w3-switch-decision",
+      "name": "Switch Decision",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [1850, 300],
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "combinator": "and",
+                "conditions": [{ "leftValue": "={{ $json.decision }}", "rightValue": "auto_valider", "operator": { "type": "string", "operation": "equals" } }]
+              },
+              "renameOutput": true,
+              "outputKey": "Auto-valider → W4"
+            },
+            {
+              "conditions": {
+                "combinator": "and",
+                "conditions": [{ "leftValue": "={{ $json.decision }}", "rightValue": "attente", "operator": { "type": "string", "operation": "equals" } }]
+              },
+              "renameOutput": true,
+              "outputKey": "Attente"
+            },
+            {
+              "conditions": {
+                "combinator": "and",
+                "conditions": [{ "leftValue": "={{ $json.decision }}", "rightValue": "escalader", "operator": { "type": "string", "operation": "equals" } }]
+              },
+              "renameOutput": true,
+              "outputKey": "Escalade"
+            }
+          ]
+        },
+        "options": { "fallbackOutput": "extra" }
+      }
+    },
+    {
+      "id": "w3-trigger-w4",
+      "name": "Trigger W4 Auto-réponse",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2150, 150],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.N8N_WEBHOOK_BASE_URL }}/webhook/nexus-w4-reponse",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ dossier_id: $json.dossier_id, template_id: $json.template_email_suggere }) }}"
+      }
+    },
+    {
+      "id": "w3-set-attente",
+      "name": "Set Status Attente",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [2150, 300],
+      "parameters": {
+        "operation": "update",
+        "base": { "value": "AIRTABLE_BASE_ID", "mode": "id" },
+        "table": { "value": "DOSSIERS_TABLE_ID", "mode": "id" },
+        "id": "={{ $json.dossier_id }}",
+        "columns": { "mappingMode": "defineBelow", "value": { "status": "attente" } }
+      },
+      "credentials": {
+        "airtableTokenApi": { "id": "AIRTABLE_CRED_ID", "name": "Airtable Nexus" }
+      }
+    },
+    {
+      "id": "w3-escalade-notify",
+      "name": "Notify Gestionnaire (Escalade)",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [2150, 500],
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "toRecipients": "nathalie@assur-connect.com",
+        "subject": "=ESCALADE — Dossier {{ $json.dossier_id }} — Score {{ $json.score_confiance }}",
+        "bodyContent": "=<h2>Dossier escaladé</h2><p><strong>Référence :</strong> {{ $json.dossier_id }}</p><p><strong>Score :</strong> {{ $json.score_confiance }}/100</p><p><strong>Raison :</strong> {{ $json.raison_decision }}</p><p><strong>Commentaire agent :</strong> {{ $json.commentaire_gestionnaire }}</p><p>Connectez-vous au dashboard pour traiter ce dossier.</p>",
+        "bodyContentType": "html"
+      },
+      "credentials": {
+        "microsoftOutlookOAuth2Api": { "id": "OUTLOOK_CRED_ID", "name": "Outlook Assur Connect" }
+      }
+    },
+    {
+      "id": "w3-set-escalade",
+      "name": "Set Status Escaladé",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [2400, 500],
+      "parameters": {
+        "operation": "update",
+        "base": { "value": "AIRTABLE_BASE_ID", "mode": "id" },
+        "table": { "value": "DOSSIERS_TABLE_ID", "mode": "id" },
+        "id": "={{ $json.dossier_id }}",
+        "columns": { "mappingMode": "defineBelow", "value": { "status": "escalade" } }
+      },
+      "credentials": {
+        "airtableTokenApi": { "id": "AIRTABLE_CRED_ID", "name": "Airtable Nexus" }
+      }
+    }
+  ],
+  "connections": {
+    "Receive from W2": {
+      "main": [[
+        { "node": "Load Dossier", "type": "main", "index": 0 },
+        { "node": "Load CG", "type": "main", "index": 0 },
+        { "node": "Load Historique Assuré", "type": "main", "index": 0 }
+      ]]
+    },
+    "Load Dossier": {
+      "main": [[{ "node": "Build Scoring Prompt", "type": "main", "index": 0 }]]
+    },
+    "Load CG": {
+      "main": [[{ "node": "Build Scoring Prompt", "type": "main", "index": 0 }]]
+    },
+    "Load Historique Assuré": {
+      "main": [[{ "node": "Build Scoring Prompt", "type": "main", "index": 0 }]]
+    },
+    "Build Scoring Prompt": {
+      "main": [[{ "node": "Claude Scoring API", "type": "main", "index": 0 }]]
+    },
+    "Claude Scoring API": {
+      "main": [[{ "node": "Parse Decision", "type": "main", "index": 0 }]]
+    },
+    "Parse Decision": {
+      "main": [[{ "node": "Update Dossier Score", "type": "main", "index": 0 }]]
+    },
+    "Update Dossier Score": {
+      "main": [[{ "node": "Switch Decision", "type": "main", "index": 0 }]]
+    },
+    "Switch Decision": {
+      "main": [
+        [{ "node": "Trigger W4 Auto-réponse", "type": "main", "index": 0 }],
+        [{ "node": "Set Status Attente", "type": "main", "index": 0 }],
+        [{ "node": "Notify Gestionnaire (Escalade)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Notify Gestionnaire (Escalade)": {
+      "main": [[{ "node": "Set Status Escaladé", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" }
+}

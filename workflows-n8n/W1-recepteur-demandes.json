@@ -1,0 +1,195 @@
+{
+  "name": "W1 — Récepteur de demandes",
+  "active": false,
+  "nodes": [
+    {
+      "id": "w1-trigger-outlook",
+      "name": "Trigger Outlook (Polling 2min)",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "parameters": {
+        "resource": "message",
+        "operation": "getAll",
+        "returnAll": false,
+        "limit": 10,
+        "filters": {
+          "isRead": false
+        },
+        "options": {
+          "folderId": "inbox"
+        }
+      },
+      "credentials": {
+        "microsoftOutlookOAuth2Api": { "id": "OUTLOOK_CRED_ID", "name": "Outlook Assur Connect" }
+      }
+    },
+    {
+      "id": "w1-trigger-webhook",
+      "name": "Trigger Webhook Ticketing",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 550],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "nexus-claims-intake",
+        "responseMode": "onReceived",
+        "authentication": "none"
+      },
+      "webhookId": "nexus-w1-intake"
+    },
+    {
+      "id": "w1-check-source",
+      "name": "IF Source = Email",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [500, 300],
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "check-email",
+              "leftValue": "={{ $json.internetMessageHeaders ? 'email' : 'ticketing' }}",
+              "rightValue": "email",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "w1-extract-attachments",
+      "name": "Extract Attachments",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 200],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Extract attachments from Outlook message\nconst item = $input.item.json;\nconst attachments = item.attachments || [];\n\nconst piecesJointes = attachments\n  .filter(a => a.contentType && (a.contentType.includes('pdf') || a.contentType.includes('image')))\n  .map(a => ({\n    nom: a.name,\n    type: a.contentType,\n    base64: a.contentBytes\n  }));\n\nreturn {\n  json: {\n    source: 'outlook',\n    email_expediteur: item.from?.emailAddress?.address || '',\n    nom_expediteur: item.from?.emailAddress?.name || '',\n    objet: item.subject || '',\n    corps: item.body?.content || '',\n    date_reception: new Date().toISOString(),\n    pieces_jointes: piecesJointes,\n    message_id: item.id\n  }\n};"
+      }
+    },
+    {
+      "id": "w1-parse-email",
+      "name": "Parse Email Body",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 200],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Parse email body to extract key fields\nconst item = $input.item.json;\nconst corps = (item.corps || '').replace(/<[^>]*>/g, ' ').trim();\n\n// Try to extract reference dossier from subject/body\nconst refMatch = (item.objet + ' ' + corps).match(/REF[-\\s]?\\d{4}[-\\s]?\\d{5}/i);\n\nreturn {\n  json: {\n    ...item,\n    corps_texte: corps.substring(0, 2000),\n    ref_dossier_detectee: refMatch ? refMatch[0] : null,\n    nb_pieces_jointes: (item.pieces_jointes || []).length\n  }\n};"
+      }
+    },
+    {
+      "id": "w1-parse-ticketing",
+      "name": "Parse Ticketing JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 450],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Parse structured JSON from ticketing API\nconst item = $input.item.json;\n\nreturn {\n  json: {\n    source: 'ticketing_api',\n    nom_assure: item.nom || item.name || '',\n    email_assure: item.email || '',\n    telephone: item.telephone || item.phone || '',\n    montant_dossard: parseFloat(item.montant || item.amount || 0),\n    nom_evenement: item.evenement || item.event || '',\n    plateforme: item.plateforme || item.platform || '',\n    date_souscription: item.date_souscription || '',\n    date_evenement: item.date_evenement || '',\n    date_annulation: item.date_annulation || new Date().toISOString().split('T')[0],\n    motif_declare: item.motif || '',\n    motif_detail: item.motif_detail || item.description || '',\n    pieces_jointes: item.pieces_jointes || item.attachments || [],\n    date_reception: new Date().toISOString()\n  }\n};"
+      }
+    },
+    {
+      "id": "w1-create-airtable",
+      "name": "Create Dossier Airtable",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [1250, 350],
+      "parameters": {
+        "operation": "create",
+        "base": { "value": "AIRTABLE_BASE_ID", "mode": "id" },
+        "table": { "value": "DOSSIERS_TABLE_ID", "mode": "id" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "nom_assure": "={{ $json.nom_assure || $json.nom_expediteur }}",
+            "email_assure": "={{ $json.email_assure || $json.email_expediteur }}",
+            "montant_dossard": "={{ $json.montant_dossard || 0 }}",
+            "nom_evenement": "={{ $json.nom_evenement || '' }}",
+            "plateforme": "={{ $json.plateforme || '' }}",
+            "date_souscription": "={{ $json.date_souscription || '' }}",
+            "date_evenement": "={{ $json.date_evenement || '' }}",
+            "date_annulation": "={{ $json.date_annulation || '' }}",
+            "date_reception": "={{ $json.date_reception }}",
+            "motif_declare": "={{ $json.motif_declare || '' }}",
+            "motif_detail": "={{ $json.motif_detail || $json.corps_texte || '' }}",
+            "source": "={{ $json.source }}",
+            "status": "nouveau",
+            "niveau_urgence": "normal"
+          }
+        }
+      },
+      "credentials": {
+        "airtableTokenApi": { "id": "AIRTABLE_CRED_ID", "name": "Airtable Nexus" }
+      }
+    },
+    {
+      "id": "w1-trigger-w2",
+      "name": "Trigger W2 Analyse",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1500, 350],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.N8N_WEBHOOK_BASE_URL }}/webhook/nexus-w2-analyse",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ dossier_id: $json.id, pieces_jointes: $node['Extract Attachments'].json.pieces_jointes || $node['Parse Ticketing JSON'].json.pieces_jointes || [] }) }}"
+      }
+    },
+    {
+      "id": "w1-mark-read",
+      "name": "Mark Email Read",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [1500, 150],
+      "parameters": {
+        "resource": "message",
+        "operation": "update",
+        "messageId": "={{ $node['Trigger Outlook (Polling 2min)'].json.id }}",
+        "updateFields": {
+          "isRead": true
+        }
+      },
+      "credentials": {
+        "microsoftOutlookOAuth2Api": { "id": "OUTLOOK_CRED_ID", "name": "Outlook Assur Connect" }
+      }
+    }
+  ],
+  "connections": {
+    "Trigger Outlook (Polling 2min)": {
+      "main": [[{ "node": "IF Source = Email", "type": "main", "index": 0 }]]
+    },
+    "Trigger Webhook Ticketing": {
+      "main": [[{ "node": "Parse Ticketing JSON", "type": "main", "index": 0 }]]
+    },
+    "IF Source = Email": {
+      "main": [
+        [{ "node": "Extract Attachments", "type": "main", "index": 0 }],
+        [{ "node": "Parse Ticketing JSON", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extract Attachments": {
+      "main": [[{ "node": "Parse Email Body", "type": "main", "index": 0 }]]
+    },
+    "Parse Email Body": {
+      "main": [[{ "node": "Create Dossier Airtable", "type": "main", "index": 0 }]]
+    },
+    "Parse Ticketing JSON": {
+      "main": [[{ "node": "Create Dossier Airtable", "type": "main", "index": 0 }]]
+    },
+    "Create Dossier Airtable": {
+      "main": [[
+        { "node": "Trigger W2 Analyse", "type": "main", "index": 0 },
+        { "node": "Mark Email Read", "type": "main", "index": 0 }
+      ]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  }
+}

@@ -1,0 +1,183 @@
+{
+  "name": "W2 — Analyseur documentaire (Claude Vision)",
+  "active": false,
+  "nodes": [
+    {
+      "id": "w2-webhook",
+      "name": "Receive from W1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "nexus-w2-analyse",
+        "responseMode": "onReceived"
+      },
+      "webhookId": "nexus-w2-analyse"
+    },
+    {
+      "id": "w2-get-dossier",
+      "name": "Get Dossier Airtable",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [500, 300],
+      "parameters": {
+        "operation": "get",
+        "base": { "value": "AIRTABLE_BASE_ID", "mode": "id" },
+        "table": { "value": "DOSSIERS_TABLE_ID", "mode": "id" },
+        "id": "={{ $json.dossier_id }}"
+      },
+      "credentials": {
+        "airtableTokenApi": { "id": "AIRTABLE_CRED_ID", "name": "Airtable Nexus" }
+      }
+    },
+    {
+      "id": "w2-check-pj",
+      "name": "IF Pieces jointes",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [750, 300],
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "has-pj",
+              "leftValue": "={{ ($json.body?.pieces_jointes || $json.pieces_jointes || []).length }}",
+              "rightValue": 0,
+              "operator": { "type": "number", "operation": "gt" }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "w2-prepare-vision",
+      "name": "Prepare Claude Vision Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 200],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const dossier = $input.item.json;\nconst pj = $node['Receive from W1'].json.pieces_jointes || [];\n\n// Build content array for Claude Vision\nconst content = [];\n\n// Add each attachment as image\nfor (const attachment of pj) {\n  if (attachment.base64) {\n    const mediaType = attachment.type || 'image/jpeg';\n    content.push({\n      type: 'image',\n      source: {\n        type: 'base64',\n        media_type: mediaType.includes('pdf') ? 'image/png' : mediaType,\n        data: attachment.base64\n      }\n    });\n  }\n}\n\n// Add the analysis prompt\nconst prompt = `Analyse le document ci-joint pour le dossier de remboursement.\n\nCONTEXTE DU DOSSIER :\n- Reference : ${dossier.ref_dossier || dossier.id}\n- Assure : ${dossier.nom_assure || ''}\n- Motif declare : ${dossier.motif_declare || ''} — ${dossier.motif_detail || ''}\n- Evenement sportif : ${dossier.nom_evenement || ''}\n- Date evenement : ${dossier.date_evenement || ''}\n- Date souscription : ${dossier.date_souscription || ''}\n- Date annulation : ${dossier.date_annulation || ''}\n\nAnalyse le document joint et reponds en JSON valide.`;\n\ncontent.push({ type: 'text', text: prompt });\n\nreturn {\n  json: {\n    dossier_id: dossier.id,\n    claude_body: {\n      model: 'claude-sonnet-4-20250514',\n      max_tokens: 1024,\n      system: `Tu es un agent expert en analyse documentaire pour Assur Connect, courtier en assurance annulation de dossards sportifs.\\n\\nMISSION : Analyser le document joint et en extraire les informations structurees.\\n\\nTYPES DE DOCUMENTS : certificat medical, attestation employeur, convocation officielle, justificatif familial, resultat d'examen.\\n\\nINSTRUCTIONS :\\n- Extrais UNIQUEMENT les informations visibles. N'invente rien.\\n- Signale tout signe de modification ou d'anomalie.\\n- Evalue la coherence et le lien avec l'impossibilite sportive.\\n\\nREPONSE : JSON valide uniquement avec les champs : type_document, date_document, emetteur {nom, qualite, coordonnees_presentes}, motif_extrait, diagnostic, dates_indisponibilite {debut, fin}, coherence_apparente, raison_incoherence, signes_modification, detail_modification, qualite_document, informations_manquantes, lien_sport, notes.`,\n      messages: [{ role: 'user', content: content }]\n    }\n  }\n};"
+      }
+    },
+    {
+      "id": "w2-claude-api",
+      "name": "Claude Vision API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1250, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "anthropic-version", "value": "2023-06-01" },
+            { "name": "content-type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.claude_body) }}"
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "CLAUDE_CRED_ID", "name": "Claude API Key" }
+      }
+    },
+    {
+      "id": "w2-parse-response",
+      "name": "Parse Claude Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1500, 200],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const response = $input.item.json;\nconst dossier_id = $node['Prepare Claude Vision Request'].json.dossier_id;\n\nlet analysis = null;\ntry {\n  const text = response.content?.[0]?.text || '';\n  // Extract JSON from response (handle markdown code blocks)\n  const jsonMatch = text.match(/\\{[\\s\\S]*\\}/);\n  if (jsonMatch) {\n    analysis = JSON.parse(jsonMatch[0]);\n  }\n} catch (e) {\n  analysis = {\n    type_document: 'inconnu',\n    qualite_document: 'illisible',\n    coherence_apparente: 'incertain',\n    notes: 'Erreur parsing reponse Claude: ' + e.message\n  };\n}\n\nreturn {\n  json: {\n    dossier_id: dossier_id,\n    document_analysis: analysis,\n    status: 'analyse'\n  }\n};"
+      }
+    },
+    {
+      "id": "w2-no-pj",
+      "name": "No PJ — Set Empty Analysis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 400],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return {\n  json: {\n    dossier_id: $input.item.json.id,\n    document_analysis: null,\n    status: 'analyse'\n  }\n};"
+      }
+    },
+    {
+      "id": "w2-update-airtable",
+      "name": "Update Dossier Airtable",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [1750, 300],
+      "parameters": {
+        "operation": "update",
+        "base": { "value": "AIRTABLE_BASE_ID", "mode": "id" },
+        "table": { "value": "DOSSIERS_TABLE_ID", "mode": "id" },
+        "id": "={{ $json.dossier_id }}",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "document_analysis": "={{ JSON.stringify($json.document_analysis) }}",
+            "status": "analyse"
+          }
+        }
+      },
+      "credentials": {
+        "airtableTokenApi": { "id": "AIRTABLE_CRED_ID", "name": "Airtable Nexus" }
+      }
+    },
+    {
+      "id": "w2-trigger-w3",
+      "name": "Trigger W3 Scoring",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2000, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.N8N_WEBHOOK_BASE_URL }}/webhook/nexus-w3-scoring",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ dossier_id: $json.dossier_id }) }}"
+      }
+    }
+  ],
+  "connections": {
+    "Receive from W1": {
+      "main": [[{ "node": "Get Dossier Airtable", "type": "main", "index": 0 }]]
+    },
+    "Get Dossier Airtable": {
+      "main": [[{ "node": "IF Pieces jointes", "type": "main", "index": 0 }]]
+    },
+    "IF Pieces jointes": {
+      "main": [
+        [{ "node": "Prepare Claude Vision Request", "type": "main", "index": 0 }],
+        [{ "node": "No PJ — Set Empty Analysis", "type": "main", "index": 0 }]
+      ]
+    },
+    "Prepare Claude Vision Request": {
+      "main": [[{ "node": "Claude Vision API", "type": "main", "index": 0 }]]
+    },
+    "Claude Vision API": {
+      "main": [[{ "node": "Parse Claude Response", "type": "main", "index": 0 }]]
+    },
+    "Parse Claude Response": {
+      "main": [[{ "node": "Update Dossier Airtable", "type": "main", "index": 0 }]]
+    },
+    "No PJ — Set Empty Analysis": {
+      "main": [[{ "node": "Update Dossier Airtable", "type": "main", "index": 0 }]]
+    },
+    "Update Dossier Airtable": {
+      "main": [[{ "node": "Trigger W3 Scoring", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" }
+}
