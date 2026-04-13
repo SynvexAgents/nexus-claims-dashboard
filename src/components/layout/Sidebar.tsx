@@ -101,11 +101,11 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
         <div className="p-4 border-t border-border-default">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-full bg-accent-purple/20 flex items-center justify-center">
-              <span className="text-xs font-bold text-accent-purple">AC</span>
+              <span className="text-xs font-bold text-accent-purple">SX</span>
             </div>
             <div>
-              <p className="text-xs font-medium text-text-primary">Assur Connect</p>
-              <p className="text-[10px] text-text-muted">BEsafe · Tokio Marine</p>
+              <p className="text-xs font-medium text-text-primary">Nexus Claims</p>
+              <p className="text-[10px] text-text-muted">Powered by Synvex</p>
             </div>
           </div>
         </div>
